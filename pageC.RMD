@@ -1,0 +1,6 @@
+---
+title: "Page C"
+output: html_document
+---
+
+#Page C Test

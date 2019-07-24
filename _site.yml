@@ -1,0 +1,31 @@
+name: "Home"
+output_dir: "."
+navbar:
+  title: "Test Consulting Site"
+  left:
+    - text: "Home"
+      href: index.html
+    - text: "Services"
+      href: services.html
+    - text: "Partners"
+      href: partners.html
+    - text: "More"
+      icon: fa-gear
+      menu:
+        - text: "Work Samples"
+        - text: "Example Analysis 1"
+          href: pageA.html
+        - text: "Example Analysis 2"
+          href: pageB.html
+        - text: "---------"
+        - text: "Heading 2"
+        - text: "Page C"
+          href: pageC.html
+
+
+        
+        
+output:
+  html_document:
+    theme: sandstone
+    highlight: textmate
