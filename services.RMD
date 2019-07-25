@@ -1,6 +1,7 @@
 ---
 title: "Services"
-output: html_document
+runtime: shiny
+output: html_document 
 ---
 
 ##Services
@@ -9,28 +10,94 @@ Test services summary page
 
 
 
-```{r}
+```{r echo=FALSE, warning=FALSE, message=FALSE}
 
 library(shiny)
+library(shinyjs)
+
+
+fieldsMandatory <- c("name", "email", "phone", "number_hours", "service")
+
+labelMandatory <- function(label) {
+  tagList(
+    label,
+    span("*", class = "mandatory_star")
+  )
+}
+
+appCSS <-
+  ".mandatory_star { color: red; }"
 
 shinyApp(
   ui = fluidPage(
+    useShinyjs(),
+    inlineCSS(appCSS),
     titlePanel("Request a Quote"),
+    
     div(
       id = "form",
       
-      textInput("name", "Name", ""),
-      textInput("email", "Email Address"),
-      textInput("phone", "Phone Number"),
-      checkboxInput("call", "Check if you'd like to receive a call", FALSE),
-      sliderInput("hours_estimate", "Estimate the number of hours needed", 0, 50, 1, ticks = TRUE),
-      selectInput("service", "Service requested",
+      textInput("name", labelMandatory("Name"), ""),
+      textInput("email", labelMandatory("Email")),
+      textInput("phone", labelMandatory("Phone")),
+      checkboxInput("call", "I would like to receive a phone call", FALSE),
+      sliderInput("number_hours", labelMandatory("Estimate of hours needed"), 0, 50, 1, ticks = TRUE),
+      selectInput("service", labelMandatory("Type of service requested"),
                   c("",  "Consultation", "Analytical/Data Services", "Both")),
       actionButton("submit", "Submit", class = "btn-primary")
-    )
+      )
   ),
   server = function(input, output, session) {
+    observe({
+      mandatoryFilled <-
+        vapply(fieldsMandatory,
+               function(x) {
+                 !is.null(input[[x]]) && input[[x]] != ""
+               },
+               logical(1))
+      mandatoryFilled <- all(mandatoryFilled)
+      
+      toggleState(id = "submit", condition = mandatoryFilled)
+    })    
   }
 )
+
+
+
+#save submissions
+
+fieldsAll <- c("name", "email", "phone", "number_hours", "service")
+
+responsesDir <- file.path("responses")
+
+epochTime <- function() {
+  as.integer(Sys.time())
+}
+
+formData <- reactive({
+  data <- sapply(fieldsAll, function(x) input[[x]])
+  data <- c(data, timestamp = epochTime())
+  data <- t(data)
+  data
+})
+
+
+saveData <- function(data) {
+  fileName <- sprintf("%s_%s.csv",
+                      humanTime(),
+                      digest::digest(data))
+  
+  write.csv(x = data, file = file.path(responsesDir, fileName),
+            row.names = FALSE, quote = TRUE)
+}
+
+# action to take when submit button is pressed
+observeEvent(input$submit, {
+  saveData(formData())
+})
+
+humanTime <- function() format(Sys.time(), "%Y%m%d-%H%M%OS")
+
+
 
 ```
